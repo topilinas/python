@@ -3,12 +3,14 @@
 import sys
 import os
 import argparse
-import domops
-import libvirt
-
 from gevent.pywsgi import WSGIServer
 from webob import Request, Response
 from gevent import sleep
+
+import libvirt
+
+from virtmanager import VirtManager
+
 
 conf = dict(
         xml=os.path.abspath("template.xml"),
@@ -18,9 +20,10 @@ conf = dict(
         name="debian")
 
 def operate(conf, cmd):
-    dom = domops.Domain(conf)
+    virt_manager = VirtManager(conf)
+    vm = virt_manager.lookup_domain(conf['name'])
     try:
-        return getattr(dom, cmd)()
+        return vm.operate(cmd)
     except AttributeError:
             print "Operation '{}' is not supported".format(cmd)
     except libvirt.libvirtError as err:
